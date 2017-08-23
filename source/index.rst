@@ -423,6 +423,7 @@ Solution: using vec<location_t> * in more places
 Committed gcc 8 patch:
 
 * r251238: "c-family/c/c++: pass optional vec<location_t> to c-format.c"
+  (2017-08-18)
 
   * https://gcc.gnu.org/ml/gcc-patches/2017-08/msg01164.html
 
@@ -448,6 +449,7 @@ Solution: use vec<location_t> * in C++ frontend
 Proposed gcc 8 patch:
 
 * "[PATCH] C++: use an optional vec<location_t> for callsites"
+  (2017-08-23)
 
   *  https://gcc.gnu.org/ml/gcc-patches/2017-08/msg01392.html
 
