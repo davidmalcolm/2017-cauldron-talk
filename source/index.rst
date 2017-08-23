@@ -377,10 +377,12 @@ Concrete example: bad arguments at a callsite
 The C++ FE currently reports::
 
   test.c: In function ‘int caller(int, int, float)’:
-  test.c:5:38: error: invalid conversion from ‘int’ to ‘const char*’ [-fpermissive]
+  test.c:5:38: error: invalid conversion from ‘int’ to ‘const char*’
+  [-fpermissive]
    return callee (first, second, third);
                                       ^
-  test.c:1:12: note:   initializing argument 2 of ‘int callee(int, const char*, float)’
+  test.c:1:12: note:   initializing argument 2 of ‘int callee(int,
+  const char*, float)’
    extern int callee (int one, const char *two, float three);
               ^~~~~~
 
@@ -390,18 +392,20 @@ The C++ FE currently reports::
 The C FE does better::
 
   test.c: In function ‘caller’:
-  test.c:5:25: warning: passing argument 2 of ‘callee’ makes pointer from integer without a cast [-Wint-conversion]
+  test.c:5:25: warning: passing argument 2 of ‘callee’ makes pointer
+  from integer without a cast [-Wint-conversion]
      return callee (first, second, third);
                            ^~~~~~
-  test.c:1:12: note: expected ‘const char *’ but argument is of type ‘int’
+  test.c:1:12: note: expected ‘const char *’ but argument is of type
+  ‘int’
    extern int callee (int one, const char *two, float three);
               ^~~~~~
 
-Note how the C FE has correctly highlighted the bogus arg at the callsite
-(this is due to the `vec<location_t>` passed around when the call is created)
+* C FE correctly highlights the bogus arg at the callsite
+  (due to the `vec<location_t>` workaround)
 
-Like the C++ frontend, it doesn't underline the pertinent parameter
-at the decl of the callee.
+* Like the C++ frontend, it doesn't underline the pertinent parameter
+  at the decl of the callee.
 
 .. nextslide::
    :increment:
@@ -409,10 +413,12 @@ at the decl of the callee.
 The ideal: highlight both argument and param::
 
   test.c: In function ‘caller’:
-  test.c:5:25: warning: passing argument 2 of ‘callee’ makes pointer from integer without a cast [-Wint-conversion]
+  test.c:5:25: warning: passing argument 2 of ‘callee’ makes pointer
+  from integer without a cast [-Wint-conversion]
      return callee (first, second, third);
                            ^~~~~~
-  test.c:1:12: note: expected ‘const char *’ but argument is of type ‘int’
+  test.c:1:12: note: expected ‘const char *’ but argument is of type
+  ‘int’
    extern int callee (int one, const char *two, float three);
                                ^~~~~~~~~~~~~~~
 
