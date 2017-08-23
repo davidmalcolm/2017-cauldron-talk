@@ -478,6 +478,57 @@ becomes::
 Doesn't help for the middle-end.
 
 
+Solution: on-the-side parse tree ("BLT")
+========================================
+
+Patch to C/C++ frontends to retain more information
+about what was seen during parsing.
+
+* "[PATCH 00/17] RFC: New source-location representation;
+  Language Server Protocol" (2017-07-24)
+
+  * https://gcc.gnu.org/ml/gcc-patches/2017-07/msg01448.html
+
+TODO:
+  * what it is
+  * what can it do
+  * screenshot of dump
+    * https://dmalcolm.fedorapeople.org/gcc/2017-07-24/fdump-blt.html
+
+.. nextslide::
+   :increment:
+
+Before::
+
+  test.c: In function ‘caller’:
+  test.c:5:25: warning: passing argument 2 of ‘callee’ makes pointer
+  from integer without a cast [-Wint-conversion]
+     return callee (first, second, third);
+                           ^~~~~~
+  test.c:1:12: note: expected ‘const char *’ but argument is of type ‘int’
+   extern int callee (int one, const char *two, float three);
+              ^~~~~~
+
+.. nextslide::
+   :increment:
+
+With BLT capturing the param locations::
+
+  test.c: In function ‘caller’:
+  test.c:5:25: warning: passing argument 2 of ‘callee’ makes pointer
+  from integer without a cast [-Wint-conversion]
+     return callee (first, second, third);
+                           ^~~~~~
+  test.c:1:12: note: expected ‘const char *’ but argument is of type ‘int’
+   extern int callee (int one, const char *two, float three);
+                               ^~~~~~~~~~~~~~~
+
+What to do about EXPR_LOCATION?
+===============================
+
+TODO: add summary slide about next slides
+
+
 Possible solution: new tree node?
 =================================
 * wrapper node
@@ -492,12 +543,6 @@ Possible solution: extrinsic locations ("tloc")
 
 (no exprs have location; convert most uses of "tree"
 to be "tree_and_loc"/"tnl"/"tloc")
-
-
-Possible solution: on-the-side parse tree ("BLT")
-=================================================
-
-
 
 
 Other stuff
@@ -518,7 +563,3 @@ Questions and Discussion
 ========================
 
 Thanks for listening!
-
-
-Extra material
-==============
