@@ -537,6 +537,8 @@ Possible solution: new tree node?
 Possible solution: embedding location_t in tcc_constant?
 ========================================================
 
+But what about shared constants?
+
 
 Possible solution: extrinsic locations ("tloc")
 ===============================================
