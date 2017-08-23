@@ -74,29 +74,104 @@ Effectively a key into a database (:c:data:`line_table`).
     in GCC 6
 
 
-There's room for improvement
-============================
+Location information in the C and C++ frontends
+===============================================
 
-The C and C++ frontends discard a lot of source location information:
+.. code-block:: c
 
-* locations of *uses* of decls and of constants
+   int test (int first, int second)
+   {
+     return foo (100, first * 42, second);
+   }
 
-* locations of the individual parameters within function decls
+.. nextslide::
+   :increment:
+
+We capture a location (of sorts) for the FUNCTION_DECL::
+
+    int test (int first, int second)
+        ^~~~
+
+.. nextslide::
+   :increment:
+
+but we throw away these locations:
+
+* return type::
+
+    int test (int first, int second)
+    ^~~
+
+* param locations (FIXME: do we?)::
+
+    int test (int first, int second)
+              ^~~~~~~~~  ^~~~~~~~~~
+
+.. nextslide::
+   :increment:
+
+We capture a location for the CALL_EXPR::
+
+     return foo (100, first * 42, second);
+            ~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. nextslide::
+   :increment:
+
+We capture locations for compound expressions e.g. the MULT_EXPR::
+
+    return foo (100, first * 42, second)
+                     ~~~~~~^~~~
+
+.. nextslide::
+   :increment:
+
+...but we *don't* permaently capture locations of constants and
+*uses* of decls::
+
+    return foo (100, first * 42, second)
+                ^--              ^-----
+
+.. nextslide::
+   :increment:
+
+Other locations we discard during parsing:
 
 * locations of attributes of a function
 
 * locations of individual tokens like close parens and
-  semicolons
+  semicolons::
 
-This limits our ability to implement "cousins" of a
-compiler on top of the GCC codebase (e.g. code refactoring tools,
-code reformatting tools, IDE support daemons, etc), since much of the
-useful location information is discarded at parse time.
+   int test (int first, int second)
+            ^         ^           ^
+   {
+   ^
+     return foo (100, first * 42, second);
+                ^   ^           ^       ^^
+   }
+   ^
 
-.. makes our diagnostics harder to read that they could be
+.. nextslide::
+   :increment:
 
-Leaf nodes in many expressions don't have location information
-==============================================================
+Missing location information limits our ability to implement
+"cousins" of a compiler on top of the GCC codebase e.g.:
+
+  * code refactoring tools,
+  * code reformatting tools
+  * IDE support daemons
+  * etc
+
+.. nextslide::
+   :increment:
+
+Ultimately, it makes our diagnostics harder to read than they could be.
+
+
+Why do we lose the location information?
+========================================
+
+Leaf nodes in many expressions don't have location information.
 
 Quoting tree.h:
 
@@ -174,11 +249,12 @@ Workaround in C++ frontend
     /* [...snip...] */
   };
 
-Current state of workarounds
-============================
+
+Current state of workarounds in gcc 7
+=====================================
 
 =============== ====================================
-When            Best source of location_t
+When            Best source of location_t in gcc 7
 =============== ====================================
 C frontend      c_expr, vec<location_t> at callsites
 C++ frontend    cp_expr
@@ -188,69 +264,99 @@ gimple-SSA      EXPR_LOCATION ()
 RTL             EXPR_LOCATION ()
 =============== ====================================
 
-.. nextslide::
-   :increment:
 
-Simple example:
+Going back to our example
+=========================
 
 .. code-block:: c
 
-   void test (int src)
+   int test (int first, int second)
    {
-     dst = src * 42;
-     return dst;
+     return foo (100, first * 42, second);
    }
 
-Within this line:
-
-.. code-block:: c
-
-  dst = src * 42;
-
-
 .. nextslide::
    :increment:
 
-``src * 42`` is a :cpp:enumerator:`MULT_EXPR`, which has a
+``first * 42`` is a :cpp:enumerator:`MULT_EXPR`, which has a
 :c:type:`location_t`:
 
 .. code-block:: c
 
-  dst = src * 42;
-        ~~~~^~~~
+     return foo (100, first * 42, second);
+                      ~~~~~~^~~~
 
-and this compound location is retained.
+and this compound location is retained past the frontend:
+
+=============== ====================================
+When            Location of MULT_EXPR
+=============== ====================================
+C frontend      Available
+C++ frontend    Available
+generic tree    Available
+gimple          Available
+gimple-SSA      Available
+RTL             Available
+=============== ====================================
 
 .. nextslide::
    :increment:
 
-``src`` is a usage of a :c:type:`PARM_DECL`; the location:
+``100`` is usage of an :c:type:`INTEGER_CST`; the location:
 
 .. code-block:: c
 
-  dst = src * 42;
-        ^~~
+     return foo (100, first * 42, second);
+                 ^~~
 
-doesn't survive past the frontend.
+is tracked via workarounds within the frontend, but doesn't
+make it into generic tree:
+
+=============== ====================================
+When            Location of INTEGER_CST param
+=============== ====================================
+C frontend      c_expr, vec<location_t> at callsites
+C++ frontend    cp_expr, but not at callsites
+generic tree    Not available
+gimple          Not available
+gimple-SSA      Not available
+RTL             Not available
+=============== ====================================
 
 .. nextslide::
    :increment:
 
-Similarly, ``42`` is usage of an :c:type:`INTEGER_CST`; the location:
+Similarly ``second`` is a usage of a :c:type:`PARM_DECL`; the location:
 
 .. code-block:: c
 
-  dst = src * 42;
-              ^~
+     return foo (100, first * 42, second);
+                                  ^~~~~~
 
-doesn't survive past the frontend.
+is tracked via workarounds within the frontend, but doesn't
+doesn't survive past the frontend:
+
+=============== ====================================
+When            Location of PARM_DECL at callsite
+=============== ====================================
+C frontend      c_expr, vec<location_t> at callsites
+C++ frontend    cp_expr, but not at callsites
+generic tree    Not available
+gimple          Not available
+gimple-SSA      Not available
+RTL             Not available
+=============== ====================================
 
 .. TODO
-   - example of bad params at callsite
-   - not every expression has a location
-   - missing stuff from middle-end
    - what's the PR?
 
+Problem: emitting warnings from the middle-end
+==============================================
+
+The missing location information means we can't
+always emit useful locations for diagnostics in the middle-end.
+
+TODO: example
 
 
 Concrete example: bad arguments at a callsite
@@ -310,32 +416,58 @@ The ideal: highlight both argument and param::
    extern int callee (int one, const char *two, float three);
                                ^~~~~~~~~~~~~~~
 
-The current solution
-====================
-
-TODO:
-
-* passing around :c:type:`location_t` values where they seem useful
-
-* falling back to the :c:data:`input_location` global
-
-* :c:type:`c_expr` and :c:type:`cp_expr`
-
-* :c:type:`vec<location_t>` approach for callsites
-
-
-Problem: emitting warnings from the middle-end
-==============================================
-
 
 Solution: using vec<location_t> * in more places
 ================================================
 
-Recent patch to c-format.c
+Committed gcc 8 patch:
+
+* r251238: "c-family/c/c++: pass optional vec<location_t> to c-format.c"
+
+  * https://gcc.gnu.org/ml/gcc-patches/2017-08/msg01164.html
+
+.. nextslide::
+   :increment:
+
+This takes the C frontend from e.g.::
+
+    printf("hello %i %i %i ", foo, bar, baz);
+                     ~^
+                     %s
+
+to::
+
+    printf("hello %i %i %i ", foo, bar, baz);
+                     ~^            ~~~
+                     %s
 
 
-Possible solution: use vec<location_t> * in C++ frontend?
-=========================================================
+Solution: use vec<location_t> * in C++ frontend
+===============================================
+
+Proposed gcc 8 patch:
+
+* "[PATCH] C++: use an optional vec<location_t> for callsites"
+
+  *  https://gcc.gnu.org/ml/gcc-patches/2017-08/msg01392.html
+
+.. nextslide::
+   :increment:
+
+This fixes the location at the callsite, for C++ frontend warnings,
+so that::
+
+  error: invalid conversion from 'int' to 'const char*' [-fpermissive]
+     return callee (first, second, third);
+                                        ^
+
+becomes::
+
+  error: invalid conversion from 'int' to 'const char*' [-fpermissive]
+     return callee (first, second, third);
+                           ^~~~~~
+
+Doesn't help for the middle-end.
 
 
 Possible solution: new tree node?
