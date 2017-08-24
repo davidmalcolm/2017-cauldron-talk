@@ -374,7 +374,7 @@ Concrete example: bad arguments at a callsite
 .. nextslide::
    :increment:
 
-The C++ FE currently reports::
+GCC 7's C++ FE reports::
 
   test.c: In function ‘int caller(int, int, float)’:
   test.c:5:38: error: invalid conversion from ‘int’ to ‘const char*’
@@ -389,7 +389,7 @@ The C++ FE currently reports::
 .. nextslide::
    :increment:
 
-The C FE does better::
+GCC 7's C FE does better::
 
   test.c: In function ‘caller’:
   test.c:5:25: warning: passing argument 2 of ‘callee’ makes pointer
@@ -421,6 +421,16 @@ The ideal: highlight both argument and param::
   ‘int’
    extern int callee (int one, const char *two, float three);
                                ^~~~~~~~~~~~~~~
+
+
+Solutions for gcc 8
+===================
+
+* extend the workarounds to cover these cases
+
+* add tracking of the missing locations (e.g. param locations within decl)
+
+* more invasive IR changes to preserve locations into the middle-end
 
 
 Solution: using vec<location_t> * in more places
@@ -489,11 +499,75 @@ about what was seen during parsing.
 
   * https://gcc.gnu.org/ml/gcc-patches/2017-07/msg01448.html
 
-TODO:
-  * what it is
-  * what can it do
-  * screenshot of dump
-    * https://dmalcolm.fedorapeople.org/gcc/2017-07-24/fdump-blt.html
+.. nextslide::
+   :increment:
+
+Screenshot of dump:
+
+* `https://dmalcolm.fedorapeople.org/gcc/2017-07-24/fdump-blt.html
+  <../../source/_static/fdump-blt.html>`_
+
+.. nextslide::
+   :increment:
+
+* tree-like hierarchy of nodes
+
+* nodes have source ranges
+
+* each node has an ID, corresponding to non-terminals in the C/C++
+  grammars
+
+  * e.g. "struct-declaration", "parameter-list"
+
+  * these are just an enum
+
+* there's a sparse two-way mapping between these nodes and the
+  regular "tree" world
+
+  * can go from a "tree" to find its BLT node, then navigate
+    the BLT hierarchy (in a lang-specific way) to locate BLT
+    nodes of interest, and hence locations
+
+.. nextslide::
+   :increment:
+
+* an additional tree of parse information
+
+  * much more concrete than our "tree" type, but
+
+  * not quite the full concrete parse tree.
+
+  * somewhere between an AST and a CPT (hence "BLT")
+
+    * name ideas?
+
+  * optional ("-fblt" currently)
+
+    * I don't yet have memory-consumption stats
+
+.. nextslide::
+   :increment:
+
+BLT is complementary to our existing IR:
+
+  * captures the locations the FEs are currently throwing away
+
+  * doesn't bother "looking inside functions": we already have
+    location information there (to avoid bloating representation)
+
+    * could handle the insides of functions if we wanted to
+
+.. nextslide::
+   :increment:
+
+* started as a experiment to debug the recursive descent through the
+  C and C++ parsers.
+
+* a possible way of supporting IDEs (e.g. via LSP)
+
+  * patchkit has a proof-of-concept of an LSP server
+
+    * anyone want to pick this up and run with it?
 
 .. nextslide::
    :increment:
@@ -523,8 +597,67 @@ With BLT capturing the param locations::
    extern int callee (int one, const char *two, float three);
                                ^~~~~~~~~~~~~~~
 
+.. nextslide::
+   :increment:
+
+Also in the patch kit:
+
+* Highlighting the return type in the function defn
+  when compaining about mismatches, e.g.:
+
+  Before::
+
+    warning: 'return' with a value, in function returning void
+       return 42;
+              ^~
+    note: declared here
+     void test_1 (void)
+          ^~~~~~
+
+.. nextslide::
+   :increment:
+
+After::
+
+    warning: 'return' with a value, in function returning void
+       return 42;
+              ^~
+    note: the return type was declared as 'void' here
+     void test_1 (void)
+     ^~~~
+
+.. nextslide::
+   :increment:
+
+Also in the patch kit:
+
+  * fix-it hints to -Wsuggest-override
+
+.. nextslide::
+   :increment:
+
+Ideas for other uses of this infrastructure (not yet done):
+
+* C++: highlight the "const" token (or suggest a fix-it hint)
+  when you have a missing "const" on the *definition* of a member
+  function that was declared as "const" (I make this mistake
+  all the time).
+
+* C++: add a fix-it hint to -Wsuggest-final-methods
+
+* highlight bogus attributes
+
+* add fix-it hints suggesting missing attributes
+
+* ...etc, plus those "cousins of a compiler" ideas mentioned above.
+
+* other ideas?
+
+
 What to do about EXPR_LOCATION?
 ===============================
+
+How to reliably get at locations from middle-end?
 
 TODO: add summary slide about next slides
 
@@ -533,6 +666,7 @@ Possible solution: new tree node?
 =================================
 * wrapper node
 
+.. TODO: which working copy?
 
 Possible solution: embedding location_t in tcc_constant?
 ========================================================
@@ -546,6 +680,7 @@ Possible solution: extrinsic locations ("tloc")
 (no exprs have location; convert most uses of "tree"
 to be "tree_and_loc"/"tnl"/"tloc")
 
+.. TODO: which working copy?
 
 Other stuff
 ===========
