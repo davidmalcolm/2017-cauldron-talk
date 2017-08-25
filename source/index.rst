@@ -739,6 +739,127 @@ GENERIC, with wrapper nodes:
     second[class="no_location"]
   }
 
+.. nextslide::
+   :increment:
+
+.. code-block:: c
+
+     return foo (100, first * 42, second);
+
+GIMPLE, status quo:
+
+.. code-block:: c
+
+  _1 = first * 42;
+  D.1799 = foo (100, _1, second);
+  return D.1799;
+
+.. nextslide::
+   :increment:
+
+GIMPLE, status quo:
+
+.. code-block:: c
+
+  _1 = first * 42;
+  D.1799 = foo (100, _1, second);
+  return D.1799;
+
+GIMPLE idea 1: don't flatten the wrappers:
+
+.. code-block:: c
+
+  _1 = wrapper_1(first) * wrapper_2(42); // using the wrapper nodes
+  D.1799 = foo (wrapper_3(100), _1, wrapper_4(second));
+  return D.1799;
+
+.. nextslide::
+   :increment:
+
+GIMPLE, status quo:
+
+.. code-block:: c
+
+  _1 = first * 42;
+  D.1799 = foo (100, _1, second);
+  return D.1799;
+
+GIMPLE idea 2, turning wrappers into temporaries:
+
+.. code-block:: c
+
+  _w_first = first;  // this stmt retains the location of the usage of "first"
+  _w_42 = 42; // likewise for the usage of "42"
+  _1 = _w_first * _w_42;
+  _w_second = second; // likewise
+  D.1799 = foo (_w_100, _1, _w_second);
+  return D.1799;
+
+.. nextslide::
+   :increment:
+
+GIMPLE SSA, status quo:
+
+.. code-block:: c
+
+  _1 = first_2(D) * 42;
+  _6 = foo (100, _1, second_4(D));
+
+GIMPLE SSA with idea 1 (unflattened wrappers):
+
+.. code-block:: c
+
+  _1 = wrapper_1(first) * wrapper_2(42);
+  _6 = foo (wrapper_3(100), _1, wrapper_4(second));
+
+Presumably to retain location information we'd need to add
+``location_t`` values to SSA_NAME...
+
+.. nextslide::
+   :increment:
+
+GIMPLE SSA, status quo:
+
+.. code-block:: c
+
+  _1 = first_2(D) * 42;
+  _6 = foo (100, _1, second_4(D));
+
+GIMPLE SSA with idea 2 (unflattened wrappers):
+
+.. code-block:: c
+
+  _w_first_1 = first;
+  _w_42_1 = 42;
+  _1 = _w_first_1 * _w_42_1;
+  _w_second_1 = second;
+  _6 = foo (_w_100_1, _1, _w_second_1);
+
+The def-stmts for the wrappers have their ``location_t``.
+
+.. nextslide::
+   :increment:
+
+Lots of issues:
+
+* what about folding?
+
+* a new tree code?  what about the hundreds of
+
+  .. code-block:: c
+
+     switch (TREE_CODE (node))
+
+* impact on memory usage?  (not yet known; still trying to get it to work)
+
+* how do the gimple representations interact with SSA and with optimization?
+
+.. nextslide::
+   :increment:
+
+Status:
+
+
 Possible solution: embedding location_t in tcc_constant?
 ========================================================
 
