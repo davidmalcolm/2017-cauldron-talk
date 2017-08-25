@@ -629,9 +629,22 @@ After::
 .. nextslide::
    :increment:
 
-Also in the patch kit:
+Also in the patch kit: fix-it hints to -Wsuggest-override::
 
-  * fix-it hints to -Wsuggest-override
+       test.cc:16:15: warning: ‘virtual void B::f()’ can be marked
+       override [-Wsuggest-override]
+         virtual void f();
+                      ^
+                          override
+       --- test.cc
+       +++ test.cc
+       @@ -13,5 +13,5 @@
+        {
+          B();
+          virtual ~B();
+       -  virtual void f();
+       +  virtual void f() override;
+        };
 
 .. nextslide::
    :increment:
