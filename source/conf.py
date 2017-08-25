@@ -245,7 +245,8 @@ texinfo_documents = [
 # -- Hieroglyph Slide Configuration ------------
 
 extensions += [
-    'hieroglyph'
+    'hieroglyph',
+    'sphinxcontrib.blockdiag', # sudo easy_install sphinxcontrib-blockdiag
 ]
 
 slide_theme = 'single-level'

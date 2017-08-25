@@ -505,7 +505,7 @@ about what was seen during parsing.
 Screenshot of dump:
 
 * `https://dmalcolm.fedorapeople.org/gcc/2017-07-24/fdump-blt.html
-  <../../source/_static/fdump-blt.html>`_
+  <_static/fdump-blt.html>`_
 
 .. nextslide::
    :increment:
@@ -666,7 +666,78 @@ Possible solution: new tree node?
 =================================
 * wrapper node
 
-.. TODO: which working copy?
+.. note to self:
+   working copy: /home/david/coding-3/gcc-git-expr-vs-decl/src
+
+
+.. nextslide::
+   :increment:
+
+.. code-block:: c
+
+     return foo (100, first * 42, second);
+
+GENERIC, status quo:
+
+.. blockdiag::
+
+  diagram {
+
+    orientation = portrait;
+
+    class has_location;
+    class no_location  [color = yellow, style = dotted];
+
+    CALL_EXPR <- 100, MULT_EXPR, second;
+    MULT_EXPR <- first, 42;
+
+    CALL_EXPR[class="has_location"]
+    MULT_EXPR[class="has_location"]
+    100[class="no_location"]
+    first[class="no_location"]
+    42[class="no_location"]
+    second[class="no_location"]
+  }
+
+.. nextslide::
+   :increment:
+
+.. code-block:: c
+
+     return foo (100, first * 42, second);
+
+GENERIC, with wrapper nodes:
+
+.. blockdiag::
+
+  diagram {
+
+    orientation = portrait;
+
+    class has_location;
+    class no_location  [color = yellow, style = dotted];
+    class wrapper [color = pink, label="WRAPPER"];
+
+    CALL_EXPR <- w_100, MULT_EXPR, w_second;
+    w_100 <- 100;
+    MULT_EXPR <- w_first, w_42;
+    w_first <- first;
+    w_42 <- 42;
+    w_second <- second;
+
+    CALL_EXPR[class="has_location"]
+    MULT_EXPR[class="has_location"]
+
+    w_100[class="wrapper"]
+    w_first[class="wrapper"]
+    w_42[class="wrapper"]
+    w_second[class="wrapper"]
+
+    100[class="no_location"]
+    first[class="no_location"]
+    42[class="no_location"]
+    second[class="no_location"]
+  }
 
 Possible solution: embedding location_t in tcc_constant?
 ========================================================
@@ -680,7 +751,13 @@ Possible solution: extrinsic locations ("tloc")
 (no exprs have location; convert most uses of "tree"
 to be "tree_and_loc"/"tnl"/"tloc")
 
-.. TODO: which working copy?
+.. note to self:
+   working copy: /home/david/coding-3/gcc-git-extrinsic-locations/src
+
+
+Rejected solution: taking BLT much further
+==========================================
+
 
 Other stuff
 ===========
