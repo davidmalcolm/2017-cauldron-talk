@@ -126,11 +126,14 @@ We capture locations for compound expressions e.g. the MULT_EXPR::
 .. nextslide::
    :increment:
 
-...but we *don't* permaently capture locations of constants and
+...but we *don't* permanently capture locations of constants and
 *uses* of decls::
 
     return foo (100, first * 42, second)
                 ^--              ^-----
+
+(see `PR 43486 "Preserve variable-use locations" <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=43486>`_,
+filed 2010-03-22)
 
 .. nextslide::
    :increment:
