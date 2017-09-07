@@ -184,7 +184,7 @@ Leaf nodes in many expressions don't have location information.
 
 Quoting tree.h:
 
-.. code-block:: c
+.. code-block:: c++
 
    /* The source location of this expression.  Non-tree_exp nodes such as
       decls and constants can be shared among multiple locations, so
@@ -197,12 +197,12 @@ Quoting tree.h:
 
 Nasty workarounds:
 
-.. code-block:: c
+.. code-block:: c++
 
   #define EXPR_LOC_OR_LOC(NODE, LOCUS) (EXPR_HAS_LOCATION (NODE) \
                          ? (NODE)->exp.locus : (LOCUS))
 
-.. code-block:: c
+.. code-block:: c++
 
   location_t loc = EXPR_LOC_OR_LOC (src, input_location);
 
@@ -213,7 +213,7 @@ Nasty workarounds:
 Workaround in C frontend
 ========================
 
-.. code-block:: c
+.. code-block:: c++
 
   struct c_expr
   {
@@ -968,7 +968,7 @@ What should the internal API look like?
 
 Consider this example (from gimple-ssa-store-merging.c):
 
-.. code-block:: c
+.. code-block:: c++
 
   if (dump_file && (dump_flags & TDF_DETAILS))
     {
@@ -982,7 +982,7 @@ Consider this example (from gimple-ssa-store-merging.c):
 
 Is it acceptable to build up a parallel API:
 
-.. code-block:: c
+.. code-block:: c++
 
   if (dump_file && (dump_flags & TDF_DETAILS))
     {
