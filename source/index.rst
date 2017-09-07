@@ -356,8 +356,6 @@ gimple-SSA      Not available
 RTL             Not available
 =============== ====================================
 
-.. TODO
-   - what's the PR?
 
 Problem: emitting warnings from the middle-end
 ==============================================
