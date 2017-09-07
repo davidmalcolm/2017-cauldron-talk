@@ -916,12 +916,53 @@ Possible solution: embedding location_t in tcc_constant?
 
 * ...but what about shared constants?
 
+* could be used with the wrapper nodes, or the wrapper nodes could
+  make this redundant
+
 
 Possible solution: extrinsic locations ("tloc")
 ===============================================
 
-(no exprs have location; convert most uses of "tree"
-to be "tree_and_loc"/"tnl"/"tloc")
+* *no* exprs have locations
+
+  * ``EXPR_LOCATION`` goes away
+
+* *uses* of nodes have locations, rather than the nodes
+  themselves
+
+* convert most uses of "tree" to be
+  "tree_and_loc"/"tnl"/"tloc"
+
+  * "tloc" has same number of chars as "tree"
+
+.. nextslide::
+   :increment:
+
+.. code-block:: c++
+
+  struct tloc
+  {
+    tree node;
+    location_t loc;
+
+    tloc () : node (NULL), loc (UNKNOWN_LOCATION) {}
+    tloc (tree node_) : node (node_), loc (UNKNOWN_LOCATION) {}
+    tloc (tree node_, location_t loc_) : node (node_), loc (loc_) {}
+
+    /* FIXME: for now.  */
+    operator tree () const { return node; }
+    //operator const_tree () const { return node; }
+    tree operator -> () const { return node; }
+  };
+
+.. nextslide::
+   :increment:
+
+Status:
+
+  * doesn't even compile yet
+
+    * e.g. issues with :c:type:`tree` vs :c:type:`const_tree`
 
 .. note to self:
    working copy: /home/david/coding-3/gcc-git-extrinsic-locations/src
