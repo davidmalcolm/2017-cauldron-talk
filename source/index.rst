@@ -614,7 +614,9 @@ Also in the patch kit:
 * Highlighting the return type in the function defn
   when compaining about mismatches, e.g.:
 
-  Before::
+  Before:
+
+.. code-block:: console
 
     warning: 'return' with a value, in function returning void
        return 42;
@@ -626,7 +628,9 @@ Also in the patch kit:
 .. nextslide::
    :increment:
 
-After::
+After:
+
+.. code-block:: console
 
     warning: 'return' with a value, in function returning void
        return 42;
@@ -638,7 +642,9 @@ After::
 .. nextslide::
    :increment:
 
-Also in the patch kit: fix-it hints to -Wsuggest-override::
+Also in the patch kit: fix-it hints to -Wsuggest-override:
+
+.. code-block:: diff
 
        test.cc:16:15: warning: ‘virtual void B::f()’ can be marked
        override [-Wsuggest-override]
