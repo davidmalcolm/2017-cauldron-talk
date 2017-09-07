@@ -55,6 +55,8 @@ What this talk is about
 
   * Possible solutions
 
+    * (with a detour into IDE support)
+
 * Better information for advanced users on what optimizers are doing
 
   * "optimization remarks"
@@ -576,8 +578,59 @@ BLT is complementary to our existing IR:
 
     * anyone want to pick this up and run with it?
 
+
+Aside: Language Server Protocol
+===============================
+
+* JSON-RPC protocol from Microsoft for a compiler to implement
+  language services for an IDE
+
+  * https://github.com/Microsoft/language-server-protocol
+
+* (demo?)
+
 .. nextslide::
    :increment:
+
+* What the patch kit implements:
+
+  * One method call out of dozens ("where is this struct declared?"),
+    messily
+
+* What the patch kit doesn't implement:
+
+  * all of the other method calls
+
+  * change-monitoring/editing
+
+  * the idea of where the "truth" of each source file is
+    (filesystem vs memory)
+
+  * coping with more than one source file and language at a time
+
+  * probably a whole bunch of other stuff
+
+
+Demo of LSP
+===========
+
+.. notes:
+
+   sudo yum install pygtk2 pygtksourceview
+   pip install json-rpc
+
+   cd /home/david/nomad-coding/c64-working-copies/gcc-git-lsp/build/gcc
+   ./xgcc -B. -c ../../src/gcc/testsuite/gcc.dg/lsp/test.c -flsp=4000 -fblt -wrapper gdb,--args^C
+
+   cd /home/david/nomad-coding/c64-working-copies/gcc-git-lsp/src
+   python gcc/testsuite/gcc.dg/lsp/toy-ide.py
+
+Back to more mundane uses of BLT...
+===================================
+
+
+Using BLT to improve our diagnostics
+====================================
 
 Before::
 
@@ -1228,6 +1281,8 @@ Summary
 * Problems with location-tracking in our internal representation(s)
 
   * Possible solutions
+
+    * (with a detour into LSP, for IDE support)
 
 * Better information for advanced users on what optimizers are doing
 
