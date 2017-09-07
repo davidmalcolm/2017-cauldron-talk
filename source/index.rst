@@ -687,12 +687,25 @@ What to do about EXPR_LOCATION?
 
 How to reliably get at locations from middle-end?
 
-TODO: add summary slide about next slides
+Possible solutions (see next slides):
+
+* add wrapper tree nodes?
+
+* embedding location_t in tcc_constant?
+
+* extrinsic locations? ("tloc" vs "tree")
+
+* taking BLT much further?
 
 
 Possible solution: new tree node?
 =================================
 * wrapper node
+
+  * should it be a new kind of tree node, or should we
+    use ``NOP_EXPR`` or ``CONVERT_EXPR``?
+
+  * my current working copy adds a new node kind (``DECL_USAGE_EXPR``)
 
 .. note to self:
    working copy: /home/david/coding-3/gcc-git-expr-vs-decl/src
@@ -887,11 +900,21 @@ Lots of issues:
 
 Status:
 
+  * work-in-progress
+
+    * examples in the above slides work, but...
+
+    * ...much of testsuite fails, and:
+
+    * ...doesn't yet bootstrap
+
 
 Possible solution: embedding location_t in tcc_constant?
 ========================================================
 
-But what about shared constants?
+* I have a patch to do this.
+
+* ...but what about shared constants?
 
 
 Possible solution: extrinsic locations ("tloc")
@@ -903,6 +926,24 @@ to be "tree_and_loc"/"tnl"/"tloc")
 .. note to self:
    working copy: /home/david/coding-3/gcc-git-extrinsic-locations/src
 
+Unlikely solution: extrinsic locations ("tree")
+===============================================
+
+"tree" is currently a typedef to a pointer:
+
+.. code-block:: c++
+
+  typedef union tree_node *tree;
+
+What if it was instead something like:
+
+.. code-block:: c++
+
+  struct tree
+  {
+    union tree_node *node;
+    location_t loc;
+  };
 
 Rejected solution: taking BLT much further
 ==========================================
