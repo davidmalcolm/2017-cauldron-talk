@@ -1106,9 +1106,22 @@ Other stuff
 Summary
 =======
 
+* Problems with location-tracking in our internal representation(s)
+
+  * Possible solutions
+
+* Better information for advanced users on what optimizers are doing
+
+  * "optimization remarks"
+
+  * tracking cloning of statements (e.g. inlining, vectorization, etc)
+
 
 Next steps
 ==========
+
+Try to get some/all of this in good enough shape for GCC 8 before
+stage 1 closes.
 
 
 Questions and Discussion
