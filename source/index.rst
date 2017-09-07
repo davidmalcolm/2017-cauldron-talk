@@ -996,7 +996,106 @@ Is it acceptable to build up a parallel API:
 Tracking cloned statements
 ==========================
 
-(TODO)
+The idea (this is a work-in-progress):
+
+.. code-block:: console
+
+  bar.c:12:5: remark: unable to vectorize loop [-Rvectorization,
+  hotness=1000]
+    for (i = 0; i < n; i++)
+        ^
+  foo.c:23:2: note: ...in inlined copy of 'init' here [einline]
+    init (&something);
+    ~~~~~^~~~~~~~~~~~
+
+i.e. stash away extra info in the :c:type:`location_t` to describe
+where the code we're optimizing came from (injecting the ``note`` above).
+
+.. nextslide::
+   :increment:
+
+Class hierarchy for describing code cloning events:
+
+.. code-block:: c++
+
+  /* Base class for describing a code-cloning event.  */
+
+  struct GTY(()) cloning_info
+  {
+    cloning_info (enum location_clone_kind kind, opt_pass *pass)
+    : m_kind (kind), m_pass (pass) {}
+
+    enum location_clone_kind m_kind;
+    opt_pass GTY((skip)) *m_pass;
+
+    /* Hook for adding a note to a diagnostic.  */
+    virtual void describe (diagnostic_context *dc) = 0;
+
+    void *operator new (size_t sz) { return ggc_internal_alloc (sz); }
+    void operator delete (void *ptr) { ggc_free (ptr); }
+  };
+
+.. nextslide::
+   :increment:
+
+Example subclass: inlining:
+
+.. code-block:: c++
+
+  struct inlining_info : public cloning_info
+  {
+    inlining_info (opt_pass *pass, source_location call_loc, tree fndecl)
+    : cloning_info (LOCATION_CLONE_INLINING, pass),
+      m_call_loc (call_loc), m_fndecl (fndecl) {}
+
+    void describe (diagnostic_context *dc) FINAL OVERRIDE;
+
+    location_t m_call_loc;
+    tree m_fndecl;
+  };
+
+.. nextslide::
+   :increment:
+
+Example subclass: loop peeling (hand-waving here):
+
+.. code-block:: console
+
+  bar.c:12:5: remark: unable to vectorize loop [-Rvectorization,
+  hotness=1000]
+    for (i = 0; i < n; i++)
+        ^
+  bar.c:12:5: note: ...in peeled epilog copy of loop, for elements
+  after last multiple of 8 [slp]
+
+.. code-block:: c++
+
+  struct peeled_loop_info : public cloning_info
+  {
+    /* TODO.  */
+
+    void describe (diagnostic_context *dc) FINAL OVERRIDE;
+
+  };
+
+.. nextslide::
+   :increment:
+
+RAII way to register a "cloning event"
+
+e.g. within tree-inline.c:expand_call_inline:
+
+.. code-block:: c++
+
+   auto_pop_cloning_info ci (new inlining_info (current_pass,
+                                                call_stmt->location,
+                                                fn);
+
+Pushes/pops the cloning event:
+
+  * all cloned gimple statements get a new :c:type:`location_t` that
+    refers to the cloning event, until the RAII object goes out of scope.
+
 
 Other stuff
 ===========
