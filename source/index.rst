@@ -53,7 +53,13 @@ What this talk is about
 
 * Problems with location-tracking in our internal representation(s)
 
-* Possible solutions
+  * Possible solutions
+
+* Better information for advanced users on what optimizers are doing
+
+  * "optimization remarks"
+
+  * tracking cloning of statements (e.g. inlining, vectorization, etc)
 
 
 History of source-location tracking in GCC
@@ -895,6 +901,96 @@ to be "tree_and_loc"/"tnl"/"tloc")
 Rejected solution: taking BLT much further
 ==========================================
 
+
+Optimization Remarks
+====================
+
+How do advanced users ask for more information on what GCC's optimizers
+are doing?
+
+e.g.
+
+* "Why isn't this loop being vectorized?"
+
+* "Did this function get inlined?  Why?"
+
+etc
+
+.. nextslide::
+   :increment:
+
+Current UI:
+
+  * turn on dump flags
+
+  * examine foo.c.SOMETHING
+
+    * where SOMETHING is undocumented, and changes from revision to
+      revision of the compiler
+
+  * no easy way to parse (both for humans and scripts)
+
+  * what is important, and what isn't?
+
+    * e.g. "only tell me about the hot loops"
+
+.. nextslide::
+   :increment:
+
+Possible UI:
+
+* a simple way to enable sending optimization information through the
+  diagnostic subsystem, e.g.:
+
+  -Rvectorization
+
+* easy-to-read output e.g.::
+
+    foo.c:23:2: remark: unable to vectorize this loop...
+    [-Rvectorization, hotness=1000]
+     for (i = 0; i < n; i++)
+         ^
+    foo.c:24:4: remark: ...due to this read [-Rvectorization,
+    hotness=1000]
+       a[i] = b[i] * some_global;
+                     ^~~~~~~~~~~
+
+.. nextslide::
+   :increment:
+
+What should the internal API look like?
+
+Consider this example (from gimple-ssa-store-merging.c):
+
+.. code-block:: c
+
+  if (dump_file && (dump_flags & TDF_DETAILS))
+    {
+      fprintf (dump_file,
+               "Recording immediate store from stmt:\n");
+      print_gimple_stmt (dump_file, stmt, 0, 0);
+    }
+
+.. nextslide::
+   :increment:
+
+Is it acceptable to build up a parallel API:
+
+.. code-block:: c
+
+  if (dump_file && (dump_flags & TDF_DETAILS))
+    {
+      fprintf (dump_file,
+               "Recording immediate store from stmt:\n");
+      print_gimple_stmt (dump_file, stmt, 0, 0);
+    }
+  if (failed_vectorization_remark (latch_stmt))
+    remark (read_stmt, "...due to this read");
+
+Tracking cloned statements
+==========================
+
+(TODO)
 
 Other stuff
 ===========
