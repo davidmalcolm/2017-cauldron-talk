@@ -1180,7 +1180,46 @@ Pushes/pops the cloning event:
 Other stuff
 ===========
 
-* overloading to get rid of "error_at_rich_loc" verbosity?
+Overloading to get rid of "error_at_rich_loc" verbosity?
+
+Adding a fix-it hint currently involves changing e.g.:
+
+.. code-block:: c++
+
+      error_at (token->location,
+                "unknown type name %qE; did you mean %qs?",
+                token->value, hint);
+
+to:
+
+.. code-block:: c++
+
+      gcc_rich_location richloc (token->location);
+      richloc.add_fixit_replace (hint);
+      error_at_rich_loc (&richloc,
+                         "unknown type name %qE; did you mean %qs?",
+                         token->value, hint);
+
+.. nextslide::
+   :increment:
+
+Could use overloading of ``error_at`` to simplify it to just from this:
+
+.. code-block:: c++
+
+      error_at (token->location,
+                "unknown type name %qE; did you mean %qs?",
+                token->value, hint);
+
+to:
+
+.. code-block:: c++
+
+      gcc_rich_location richloc (token->location);
+      richloc.add_fixit_replace (hint);
+      error_at (&richloc,
+                "unknown type name %qE; did you mean %qs?",
+                token->value, hint);
 
 
 Summary
