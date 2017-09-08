@@ -981,7 +981,7 @@ GIMPLE SSA, status quo:
   _1 = first_2(D) * 42;
   _6 = foo (100, _1, second_4(D));
 
-GIMPLE SSA with idea 2 (unflattened wrappers):
+GIMPLE SSA with idea 2 (flattened wrappers):
 
 .. code-block:: c
 
