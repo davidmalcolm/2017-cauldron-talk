@@ -801,6 +801,25 @@ Current, unoptimized content (x86_64 host):
 
 * etc
 
+BLT Design Questions
+====================
+
+* do we support editability? (can save memory if we don't)
+
+* how much should we capture?
+
+  * EVERYTHING?  (inside function bodies?  individual tokens?)
+
+  * or just some subset
+
+    * I favor capturing the things that we're currently missing,
+      wherever it allows improvements to our diagnostics
+      ("pragmatic approach"?)
+
+* do we store BLT information in LTO?  (I'm thinking "no")
+
+* what's the lifetime of the BLT nodes?  when do we delete them?
+
 .. nextslide::
    :increment:
 
