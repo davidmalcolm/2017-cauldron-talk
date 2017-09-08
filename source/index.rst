@@ -82,6 +82,34 @@ Effectively a key into a database (:c:data:`line_table`).
     in GCC 6
 
 
+``location_t`` vs  ``rich_location``
+====================================
+
+* A :c:type:`location_t` is a caret+start+finish, often with caret==start
+  e.g.::
+
+    dst = foo * bar;
+          ~~~~^~~~~
+
+    dst = foo * bar;
+          ^~~
+
+* A :c:type:`location_t` can also represent a macro expansion
+  location.
+
+.. nextslide::
+   :increment:
+
+* A :c:type:`rich_location` is a bundle of information for
+  :c:func:`diagnosic_show_locus`:
+
+  * one or more :c:type:`location_t`
+
+  * zero or more fix-it hints
+
+This talk is about :c:type:`location_t`.
+
+
 Location information in the C and C++ frontends
 ===============================================
 
