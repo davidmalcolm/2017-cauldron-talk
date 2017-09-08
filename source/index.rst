@@ -63,6 +63,8 @@ What this talk is about
 
   * tracking cloning of statements (e.g. inlining, vectorization, etc)
 
+* Discussion of above, and what's doable for gcc 8
+
 
 History of source-location tracking in GCC
 ==========================================
@@ -76,7 +78,7 @@ Effectively a key into a database (:c:data:`line_table`).
 
   * column numbers were added in 2004
 
-  * tracking of macro expansions in 2011
+  * tracking of macro expansions in 2011 (Dodji, I believe)
 
   * I added tracking of *ranges* of source code (rather that just points)
     in GCC 6
@@ -101,9 +103,11 @@ Effectively a key into a database (:c:data:`line_table`).
    :increment:
 
 * A :c:type:`rich_location` is a bundle of information for
-  :c:func:`diagnosic_show_locus`:
+  :c:func:`diagnostic_show_locus`:
 
-  * one or more :c:type:`location_t`
+  * a primary :c:type:`location_t`
+
+  * zero or more secondary :c:type:`location_t`
 
   * zero or more fix-it hints
 
@@ -820,6 +824,8 @@ BLT Design Questions
 
 * what's the lifetime of the BLT nodes?  when do we delete them?
 
+  * maybe a :c:type:`blt_context` containing an obstack?
+
 .. nextslide::
    :increment:
 
@@ -869,9 +875,35 @@ Possible solution: new tree node?
 
   * my current working copy adds a new node kind (``DECL_USAGE_EXPR``)
 
+Status:
+
+  * work-in-progress
+
+    * examples in the above slides work, but...
+
+    * ...much of testsuite fails, and:
+
+    * ...doesn't yet bootstrap
+
 .. note to self:
    working copy: /home/david/coding-3/gcc-git-expr-vs-decl/src
 
+.. nextslide::
+   :increment:
+
+Lots of issues:
+
+* what about folding?
+
+* a new tree code?  what about the hundreds of
+
+  .. code-block:: c
+
+     switch (TREE_CODE (node))
+
+* impact on memory usage?  (not yet known; still trying to get it to work)
+
+* how do the gimple representations interact with SSA and with optimization?
 
 .. nextslide::
    :increment:
@@ -1015,8 +1047,8 @@ GIMPLE SSA with idea 1 (unflattened wrappers):
   _1 = wrapper_1(first) * wrapper_2(42);
   _6 = foo (wrapper_3(100), _1, wrapper_4(second));
 
-Presumably to retain location information we'd need to add
-``location_t`` values to SSA_NAME...
+.. Presumably to retain location information we'd need to add
+   ``location_t`` values to SSA_NAME...
 
 .. nextslide::
    :increment:
@@ -1043,32 +1075,6 @@ The def-stmts for the wrappers have their ``location_t``.
 .. nextslide::
    :increment:
 
-Lots of issues:
-
-* what about folding?
-
-* a new tree code?  what about the hundreds of
-
-  .. code-block:: c
-
-     switch (TREE_CODE (node))
-
-* impact on memory usage?  (not yet known; still trying to get it to work)
-
-* how do the gimple representations interact with SSA and with optimization?
-
-.. nextslide::
-   :increment:
-
-Status:
-
-  * work-in-progress
-
-    * examples in the above slides work, but...
-
-    * ...much of testsuite fails, and:
-
-    * ...doesn't yet bootstrap
 
 
 Possible solution: embedding location_t in tcc_constant?
@@ -1152,6 +1158,18 @@ Rejected solution: taking BLT much further
 ==========================================
 
 
+Missing locations: plan for GCC 8
+=================================
+
+* fix existing workarounds to work better
+
+* implement a pragmatic subset of BLT
+
+* continue investigating wrapper nodes
+
+* any other possible solutions I haven't thought of?
+
+
 Optimization Remarks
 ====================
 
@@ -1176,7 +1194,7 @@ Current UI:
   * examine foo.c.SOMETHING
 
     * where SOMETHING is undocumented, and changes from revision to
-      revision of the compiler
+      revision of the compiler (e.g. "foo.c.029t.einline")
 
   * no easy way to parse (both for humans and scripts)
 
@@ -1190,9 +1208,9 @@ Current UI:
 Possible UI:
 
 * a simple way to enable sending optimization information through the
-  diagnostic subsystem, e.g.:
+  diagnostic subsystem, e.g.::
 
-  -Rvectorization
+  -Rvectorization -fdiagnostics-hotness-threshold=500
 
 * easy-to-read output e.g.::
 
@@ -1200,8 +1218,7 @@ Possible UI:
     [-Rvectorization, hotness=1000]
      for (i = 0; i < n; i++)
          ^
-    foo.c:24:4: remark: ...due to this read [-Rvectorization,
-    hotness=1000]
+    foo.c:24:4: note: ...due to this read
        a[i] = b[i] * some_global;
                      ^~~~~~~~~~~
 
@@ -1210,14 +1227,14 @@ Possible UI:
 
 What should the internal API look like?
 
-Consider this example (from gimple-ssa-store-merging.c):
+Consider this example:
 
 .. code-block:: c++
 
   if (dump_file && (dump_flags & TDF_DETAILS))
     {
       fprintf (dump_file,
-               "Recording immediate store from stmt:\n");
+               "can't frobnicate this stmt:\n");
       print_gimple_stmt (dump_file, stmt, 0, 0);
     }
 
@@ -1231,11 +1248,11 @@ Is it acceptable to build up a parallel API:
   if (dump_file && (dump_flags & TDF_DETAILS))
     {
       fprintf (dump_file,
-               "Recording immediate store from stmt:\n");
+               "can't frobnicate this stmt:\n");
       print_gimple_stmt (dump_file, stmt, 0, 0);
     }
-  if (failed_vectorization_remark (latch_stmt))
-    remark (read_stmt, "...due to this read");
+  if (failed_vectorization_remark (loop_stmt))
+    inform (read_stmt->location, "...due to this read");
 
 Tracking cloned statements
 ==========================
@@ -1266,17 +1283,13 @@ Class hierarchy for describing code cloning events:
 
   struct GTY(()) cloning_info
   {
-    cloning_info (enum location_clone_kind kind, opt_pass *pass)
-    : m_kind (kind), m_pass (pass) {}
-
     enum location_clone_kind m_kind;
     opt_pass GTY((skip)) *m_pass;
 
     /* Hook for adding a note to a diagnostic.  */
     virtual void describe (diagnostic_context *dc) = 0;
 
-    void *operator new (size_t sz) { return ggc_internal_alloc (sz); }
-    void operator delete (void *ptr) { ggc_free (ptr); }
+    /* [...snip...] */
   };
 
 .. nextslide::
