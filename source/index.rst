@@ -587,10 +587,24 @@ Aside: Language Server Protocol
 
   * https://github.com/Microsoft/language-server-protocol
 
-* (demo?)
 
-.. nextslide::
-   :increment:
+Demo of LSP
+===========
+
+.. notes:
+
+   sudo yum install pygtk2 pygtksourceview
+   pip install json-rpc
+
+   cd /home/david/nomad-coding/c64-working-copies/gcc-git-lsp/build/gcc
+   ./xgcc -B. -c ../../src/gcc/testsuite/gcc.dg/lsp/test.c -flsp=4000 -fblt -wrapper gdb,--args^C
+
+   cd /home/david/nomad-coding/c64-working-copies/gcc-git-lsp/src
+   python gcc/testsuite/gcc.dg/lsp/toy-ide.py
+
+
+Aside: Language Server Protocol
+===============================
 
 * What the patch kit implements:
 
@@ -610,20 +624,6 @@ Aside: Language Server Protocol
 
   * probably a whole bunch of other stuff
 
-
-Demo of LSP
-===========
-
-.. notes:
-
-   sudo yum install pygtk2 pygtksourceview
-   pip install json-rpc
-
-   cd /home/david/nomad-coding/c64-working-copies/gcc-git-lsp/build/gcc
-   ./xgcc -B. -c ../../src/gcc/testsuite/gcc.dg/lsp/test.c -flsp=4000 -fblt -wrapper gdb,--args^C
-
-   cd /home/david/nomad-coding/c64-working-copies/gcc-git-lsp/src
-   python gcc/testsuite/gcc.dg/lsp/toy-ide.py
 
 Back to more mundane uses of BLT...
 ===================================
