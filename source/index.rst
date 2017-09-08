@@ -733,6 +733,70 @@ Ideas for other uses of this infrastructure (not yet done):
 * other ideas?
 
 
+.. nextslide::
+   :increment:
+
+.. code-block:: c++
+
+  class blt_node
+  {
+    /* [... lots of methods/accessors ...]  */
+  private:
+    enum blt_kind m_kind;
+    blt_node *m_parent;
+    blt_node *m_first_child;
+    blt_node *m_last_child;
+    blt_node *m_prev_sibling;
+    blt_node *m_next_sibling;
+    location_t m_start;
+    location_t m_finish;
+    tree m_tree;
+  };
+
+.. nextslide::
+   :increment:
+
+Current, unoptimized content (x86_64 host):
+
+.. code-block:: console
+
+  (gdb) p sizeof(blt_node)
+  $1 = 64
+
+* easy win: reorder fields for better packing
+
+* currently has lots of pointers, supporting editing
+
+  * could save some of these, making them immutable after construction
+
+  * or pointer compression (indexes rather than pointers)
+
+* etc
+
+.. nextslide::
+   :increment:
+
+Should we store token pointers rather than location_t?
+
+.. code-block:: c++
+
+  class blt_node
+  {
+    /* [...]  */
+  #if 1
+    location_t m_start;
+    location_t m_finish;
+  #else
+    // C++: tokens are currently released after lexing...
+    cp_token *m_first_token;
+    cp_token *m_last_token;
+    // C: tokens are released *during* lexing
+  #endif
+    /* [...]  */
+
+  };
+
+
 What to do about EXPR_LOCATION?
 ===============================
 
