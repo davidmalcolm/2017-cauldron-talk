@@ -1230,21 +1230,37 @@ Possible UI:
 .. nextslide::
    :increment:
 
-What should the internal API look like?
+Taking another leaf from clang::
 
-Consider this example:
+  -fsave-optimization-record -foptimization-record-file=foo.yaml
 
-.. code-block:: c++
-
-  if (dump_file && (dump_flags & TDF_DETAILS))
-    {
-      fprintf (dump_file,
-               "can't frobnicate this stmt:\n");
-      print_gimple_stmt (dump_file, stmt, 0, 0);
-    }
+(perhaps with a compatible format?  they have viewers)
 
 .. nextslide::
    :increment:
+
+What should the internal API look like?
+
+e.g.:
+
+.. code-block:: c++
+
+  if (failed_vectorization_remark (loop_stmt))
+    inform (read_stmt->location, "...due to this read");
+
+.. code-block:: c++
+
+  extern bool remark (location_t, int, const char *, ...)
+    ATTRIBUTE_GCC_DIAG(3,4);
+
+  extern bool remark (gimple *, int, const char *, ...)
+    ATTRIBUTE_GCC_DIAG(3,4);
+
+  // or pass in gcov_type or a frequency?
+
+
+How to take this forward?
+=========================
 
 Is it acceptable to build up a parallel API:
 
@@ -1256,8 +1272,9 @@ Is it acceptable to build up a parallel API:
                "can't frobnicate this stmt:\n");
       print_gimple_stmt (dump_file, stmt, 0, 0);
     }
-  if (failed_vectorization_remark (loop_stmt))
-    inform (read_stmt->location, "...due to this read");
+  remark (loop_stmt, OPT_remark_foo,
+          "can't frobnicate this stmt");
+
 
 Tracking cloned statements
 ==========================
