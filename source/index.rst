@@ -820,11 +820,16 @@ BLT Design Questions
       wherever it allows improvements to our diagnostics
       ("pragmatic approach"?)
 
-* do we store BLT information in LTO?  (I'm thinking "no")
+.. nextslide::
+   :increment:
 
 * what's the lifetime of the BLT nodes?  when do we delete them?
 
   * maybe a :c:type:`blt_context` containing an obstack?
+
+* do we store BLT information in LTO?  (I'm thinking "no")
+
+* do we store BLT information in PCH?  (I'm not sure)
 
 .. nextslide::
    :increment:
