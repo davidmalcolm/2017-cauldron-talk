@@ -634,6 +634,64 @@ Demo of LSP
    cd /home/david/nomad-coding/c64-working-copies/gcc-git-lsp/src
    python gcc/testsuite/gcc.dg/lsp/toy-ide.py
 
+Toy IDE (~150 lines of PyGTK code):
+
+.. image:: /_static/toy-ide-before.png
+   :scale: 50%
+
+Click on usage of "struct foo" and click on "Goto Definition"
+
+.. nextslide::
+   :increment:
+
+IDE makes request to cc1::
+
+  cc1: note: received http request: ‘POST /jsonrpc HTTP/1.\x0d\x0aHost
+  : localhost:400\x0d\x0aConnection: keep-aliv\x0d\x0aAccept-Encoding:
+  gzip, deflat\x0d\x0aAccept: */\x0d\x0aUser-Agent: python-requests/2.
+  13.\x0d\x0acontent-type: application/jso\x0d\x0aContent-Length: 18\x
+  0d\x0a\x0d\x0a{"jsonrpc": "2.0", "params": {"position": {"line": 8,
+  "character": 17}, "textDocument": {"uri": "../../src/gcc/testsuite/g
+  cc.dg/lsp/test.c"}}, "method": "textDocument/definition", "id": 8}’
+
+i.e. this JSON-RPC request::
+
+  {"jsonrpc": "2.0",
+   "params": {"position": {"line": 8, "character": 17},
+              "textDocument": {"uri": "../../src/gcc/testsuite/gcc.dg/lsp/test.c"}},
+   "method": "textDocument/definition",
+   "id": 8}
+
+.. nextslide::
+   :increment:
+
+cc1 uses BLT to locate what's at the file-line-column
+
+cc1 uses BLT to locate the definition of it
+
+.. nextslide::
+   :increment:
+
+cc1 issues RPC response::
+
+  [{"range": {"end": {"character": 1, "line": 6},
+              "start": {"character": 0, "line": 2}},
+     uri": "../../src/gcc/testsuite/gcc.dg/lsp/test.c"}]
+
+like this::
+
+  cc1: note: sending http response: ‘HTTP/1.1 200 O\x0d\x0aContent-Len
+  gth:13\x0d\x0a\x0d\x0a[{"range": {"end": {"character": 1, "line": 6}
+  , "start": {"character": 0, "line": 2}}, "uri": "../../src/gcc/tests
+  uite/gcc.dg/lsp/test.c"}]’
+
+.. nextslide::
+   :increment:
+
+IDE highlights the returned region of source:
+
+.. image:: /_static/toy-ide-after.png
+   :scale: 50%
 
 Aside: Language Server Protocol
 ===============================
