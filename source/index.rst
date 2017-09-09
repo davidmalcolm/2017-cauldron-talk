@@ -1170,6 +1170,9 @@ Missing locations: plan for GCC 8
 
 * implement a pragmatic subset of BLT
 
+  * my hope is to come up with a useful subset with
+    no noticeable effect on compile time/memory
+
 * continue investigating wrapper nodes
 
 * any other possible solutions I haven't thought of?
