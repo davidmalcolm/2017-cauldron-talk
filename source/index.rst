@@ -19,9 +19,9 @@
 
    "make slides" then works
 
-============================================================
-GCC diagnostics and location-tracking improvements for GCC 8
-============================================================
+=======================================================
+Diagnostic and location-tracking improvements for GCC 8
+=======================================================
 
 GNU Tools Cauldron 2017
 
@@ -63,7 +63,7 @@ What this talk is about
 
   * tracking cloning of statements (e.g. inlining, vectorization, etc)
 
-* Discussion of above, and what's doable for gcc 8
+* Discussion of above, and what's doable for gcc 8 (and beyond)
 
 
 History of source-location tracking in GCC
@@ -469,9 +469,10 @@ Solutions for gcc 8
 
 * extend the workarounds to cover these cases
 
-* add tracking of the missing locations (e.g. param locations within decl)
+* add tracking of the missing locations
 
-* more invasive IR changes to preserve locations into the middle-end
+* preserving locations of all expressions into the middle-end
+  (and beyond?)
 
 
 Solution: using vec<location_t> * in more places
@@ -584,7 +585,7 @@ Screenshot of dump:
 
   * optional ("-fblt" currently)
 
-    * I don't yet have memory-consumption stats
+    * (see later in talk for discussion of memory tradeoffs)
 
 .. nextslide::
    :increment:
@@ -913,6 +914,16 @@ Should we store token pointers rather than location_t?
   };
 
 
+GCC 8 plan for BLT
+==================
+
+  * I hope to come up with a subset of this work (before
+    close of stage1) that improves diagnostics, with no
+    noticeable effect on compile time/memory
+
+  * mothballing the LSP work for now (any volunteers?)
+
+
 What to do about EXPR_LOCATION?
 ===============================
 
@@ -1226,10 +1237,7 @@ Missing locations: plan for GCC 8
 
 * fix existing workarounds to work better
 
-* implement a pragmatic subset of BLT
-
-  * my hope is to come up with a useful subset with
-    no noticeable effect on compile time/memory
+* the BLT work discussed earlier
 
 * continue investigating wrapper nodes
 
@@ -1257,9 +1265,9 @@ Current UI:
 
   * turn on dump flags
 
-  * examine foo.c.SOMETHING
+  * examine ``foo.c.SOMETHING``
 
-    * where SOMETHING is undocumented, and changes from revision to
+    * where "SOMETHING" is undocumented, and changes from revision to
       revision of the compiler (e.g. "foo.c.029t.einline")
 
   * no easy way to parse (both for humans and scripts)
@@ -1306,8 +1314,13 @@ e.g.:
 
 .. code-block:: c++
 
-  if (failed_vectorization_remark (loop_stmt))
-    inform (read_stmt->location, "...due to this read");
+  if (!some_test_for_validity_of_optimization_p (...))
+    {
+      if (failed_vectorization_remark (loop_stmt))
+        inform (read_stmt->location, "...due to this read");
+      return false;
+    }
+
 
 .. code-block:: c++
 
@@ -1489,7 +1502,13 @@ Summary
 
   * Possible solutions
 
-    * (with a detour into LSP, for IDE support)
+    * better workarounds
+
+    * BLT
+
+    * experiments with preserving locations into middle-end
+
+  * (detour into LSP, for IDE support)
 
 * Better information for advanced users on what optimizers are doing
 
@@ -1509,3 +1528,5 @@ Questions and Discussion
 ========================
 
 Thanks for listening!
+
+(thanks to Red Hat for funding this work)
