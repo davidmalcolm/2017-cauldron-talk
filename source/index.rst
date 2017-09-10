@@ -939,7 +939,7 @@ Possible solutions (see next slides):
 
 * extrinsic locations? ("tloc" vs "tree")
 
-* taking BLT much further?
+* other ideas?
 
 
 Possible solution: new tree node?
@@ -1229,9 +1229,6 @@ What if it was instead something like:
     union tree_node *node;
     location_t loc;
   };
-
-Rejected solution: taking BLT much further
-==========================================
 
 
 Missing locations: plan for GCC 8
