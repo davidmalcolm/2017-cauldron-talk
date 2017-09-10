@@ -546,6 +546,8 @@ about what was seen during parsing.
 
 Screenshot of dump:
 
+* ``-fdump-blt``
+
 * `https://dmalcolm.fedorapeople.org/gcc/2017-07-24/fdump-blt.html
   <_static/fdump-blt.html>`_
 
