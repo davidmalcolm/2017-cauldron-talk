@@ -27,6 +27,8 @@ GNU Tools Cauldron 2017
 
 David Malcolm <dmalcolm@redhat.com>
 
+https://dmalcolm.fedorapeople.org/presentations/cauldron-2017/
+
 .. Abstract: I've got a number of proposals for improving diagnostics and
    how we track source locations in GCC, which I'd like to present at
    Cauldron; extending location-tracking to cover:
@@ -1529,3 +1531,5 @@ Questions and Discussion
 Thanks for listening!
 
 (thanks to Red Hat for funding this work)
+
+URL for these slides: https://dmalcolm.fedorapeople.org/presentations/cauldron-2017/
